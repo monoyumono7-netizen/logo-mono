@@ -1,0 +1,67 @@
+0 verbose cli /usr/local/bin/node /usr/local/bin/npm
+1 info using npm@10.9.3
+2 info using node@v22.20.0
+3 silly config load:file:/usr/local/lib/node_modules/npm/npmrc
+4 silly config load:file:/Users/mono/.npmrc
+5 silly config load:file:/usr/local/etc/npmrc
+6 verbose title npm install typescript-language-server typescript
+7 verbose argv "install" "--global" "typescript-language-server" "typescript" "--cache" "/Users/mono/Desktop/test/.npm-cache"
+8 verbose logfile logs-max:10 dir:/Users/mono/Desktop/test/.npm-cache/_logs/2026-02-16T05_41_20_370Z-
+9 verbose logfile /Users/mono/Desktop/test/.npm-cache/_logs/2026-02-16T05_41_20_370Z-debug-0.log
+10 silly packumentCache heap:4345298944 maxSize:1086324736 maxEntrySize:543162368
+11 silly logfile done cleaning log files
+12 silly idealTree buildDeps
+13 silly fetch manifest typescript-language-server@*
+14 silly packumentCache full:https://registry.npmjs.org/typescript-language-server cache-miss
+15 http fetch GET 200 https://registry.npmjs.org/typescript-language-server 1132ms (cache miss)
+16 silly packumentCache full:https://registry.npmjs.org/typescript-language-server set size:undefined disposed:false
+17 silly fetch manifest typescript@*
+18 silly packumentCache full:https://registry.npmjs.org/typescript cache-miss
+19 http cache https://registry.npmjs.org/typescript 27ms (cache hit)
+20 silly packumentCache full:https://registry.npmjs.org/typescript set size:15250084 disposed:false
+21 silly placeDep ROOT typescript@5.9.3 OK for:  want: *
+22 silly placeDep ROOT typescript-language-server@5.1.3 OK for:  want: *
+23 silly reify moves {}
+24 verbose stack Error: EACCES: permission denied, mkdir '/usr/local/lib/node_modules/typescript'
+24 verbose stack     at async mkdir (node:internal/fs/promises:860:10)
+24 verbose stack     at async /usr/local/lib/node_modules/npm/node_modules/@npmcli/arborist/lib/arborist/reify.js:624:20
+24 verbose stack     at async Promise.allSettled (index 0)
+24 verbose stack     at async [reifyPackages] (/usr/local/lib/node_modules/npm/node_modules/@npmcli/arborist/lib/arborist/reify.js:325:11)
+24 verbose stack     at async Arborist.reify (/usr/local/lib/node_modules/npm/node_modules/@npmcli/arborist/lib/arborist/reify.js:142:5)
+24 verbose stack     at async Install.exec (/usr/local/lib/node_modules/npm/lib/commands/install.js:150:5)
+24 verbose stack     at async Npm.exec (/usr/local/lib/node_modules/npm/lib/npm.js:207:9)
+24 verbose stack     at async module.exports (/usr/local/lib/node_modules/npm/lib/cli/entry.js:74:5)
+25 error code EACCES
+26 error syscall mkdir
+27 error path /usr/local/lib/node_modules/typescript
+28 error errno -13
+29 error Error: EACCES: permission denied, mkdir '/usr/local/lib/node_modules/typescript'
+29 error     at async mkdir (node:internal/fs/promises:860:10)
+29 error     at async /usr/local/lib/node_modules/npm/node_modules/@npmcli/arborist/lib/arborist/reify.js:624:20
+29 error     at async Promise.allSettled (index 0)
+29 error     at async [reifyPackages] (/usr/local/lib/node_modules/npm/node_modules/@npmcli/arborist/lib/arborist/reify.js:325:11)
+29 error     at async Arborist.reify (/usr/local/lib/node_modules/npm/node_modules/@npmcli/arborist/lib/arborist/reify.js:142:5)
+29 error     at async Install.exec (/usr/local/lib/node_modules/npm/lib/commands/install.js:150:5)
+29 error     at async Npm.exec (/usr/local/lib/node_modules/npm/lib/npm.js:207:9)
+29 error     at async module.exports (/usr/local/lib/node_modules/npm/lib/cli/entry.js:74:5) {
+29 error   errno: -13,
+29 error   code: 'EACCES',
+29 error   syscall: 'mkdir',
+29 error   path: '/usr/local/lib/node_modules/typescript'
+29 error }
+30 error
+30 error The operation was rejected by your operating system.
+30 error It is likely you do not have the permissions to access this file as the current user
+30 error
+30 error If you believe this might be a permissions issue, please double-check the
+30 error permissions of the file and its containing directories, or try running
+30 error the command again as root/Administrator.
+31 silly unfinished npm timer reify 1771220480582
+32 silly unfinished npm timer reify:createSparse 1771220481810
+33 verbose cwd /Users/mono/Desktop/test
+34 verbose os Darwin 25.2.0
+35 verbose node v22.20.0
+36 verbose npm  v10.9.3
+37 verbose exit -13
+38 verbose code -13
+39 error A complete log of this run can be found in: /Users/mono/Desktop/test/.npm-cache/_logs/2026-02-16T05_41_20_370Z-debug-0.log
