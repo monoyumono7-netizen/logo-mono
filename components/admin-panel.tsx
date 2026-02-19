@@ -5,6 +5,7 @@ import { useMemo, useState } from 'react';
 
 import { AdminMarkdownUploader } from '@/components/admin-markdown-uploader';
 import type { AdminPostSummary } from '@/lib/admin-types';
+import { waitForPostGone } from '@/lib/client-post-visibility';
 
 interface AdminPanelProps {
   readonly initialPosts: readonly AdminPostSummary[];
@@ -16,6 +17,7 @@ export function AdminPanel({ initialPosts }: AdminPanelProps): JSX.Element {
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [deletingSlug, setDeletingSlug] = useState('');
+  const [pendingDeleteSlug, setPendingDeleteSlug] = useState('');
 
   const filteredPosts = useMemo(() => {
     const query = keyword.trim().toLowerCase();
@@ -36,11 +38,6 @@ export function AdminPanel({ initialPosts }: AdminPanelProps): JSX.Element {
   };
 
   const onDelete = async (slug: string): Promise<void> => {
-    const confirmed = window.confirm(`确认删除文章 ${slug} 吗？删除后将提交到 GitHub。`);
-    if (!confirmed) {
-      return;
-    }
-
     setDeletingSlug(slug);
     setError('');
     setMessage('');
@@ -58,9 +55,12 @@ export function AdminPanel({ initialPosts }: AdminPanelProps): JSX.Element {
       }
 
       setPosts((prev) => prev.filter((post) => post.slug !== slug));
-      setMessage(data.message ?? '删除成功');
+      const postPath = `/posts/${encodeURIComponent(slug)}`;
+      const gone = await waitForPostGone(postPath);
+      setMessage(gone ? `删除成功，文章页已下线：${postPath}` : (data.message ?? '删除成功，文章页正在下线中'));
     } finally {
       setDeletingSlug('');
+      setPendingDeleteSlug('');
     }
   };
 
@@ -144,12 +144,27 @@ export function AdminPanel({ initialPosts }: AdminPanelProps): JSX.Element {
                         type="button"
                         disabled={deletingSlug === post.slug}
                         onClick={() => {
+                          if (pendingDeleteSlug !== post.slug) {
+                            setPendingDeleteSlug(post.slug);
+                            return;
+                          }
                           void onDelete(post.slug);
                         }}
-                        className="text-red-600 transition hover:opacity-75 disabled:cursor-not-allowed disabled:opacity-60"
+                        className={`transition hover:opacity-75 disabled:cursor-not-allowed disabled:opacity-60 ${
+                          pendingDeleteSlug === post.slug ? 'text-red-700 font-semibold' : 'text-red-600'
+                        }`}
                       >
-                        {deletingSlug === post.slug ? '删除中...' : '删除'}
+                        {deletingSlug === post.slug ? '删除中...' : pendingDeleteSlug === post.slug ? '确认删除' : '删除'}
                       </button>
+                      {pendingDeleteSlug === post.slug && deletingSlug !== post.slug ? (
+                        <button
+                          type="button"
+                          onClick={() => setPendingDeleteSlug('')}
+                          className="text-muted transition hover:text-text"
+                        >
+                          取消
+                        </button>
+                      ) : null}
                     </div>
                   </td>
                 </tr>
