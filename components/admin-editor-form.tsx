@@ -37,8 +37,27 @@ export function AdminEditorForm({ mode, initialData }: AdminEditorFormProps): JS
   const [error, setError] = useState('');
 
   const normalizedSlug = useMemo(() => slugify(slug), [slug]);
+  const missingFields = useMemo(() => {
+    const fields: string[] = [];
+    if (!title.trim()) {
+      fields.push('标题');
+    }
+    if (!normalizedSlug) {
+      fields.push('Slug');
+    }
+    if (!content.trim()) {
+      fields.push('正文');
+    }
+    return fields;
+  }, [content, normalizedSlug, title]);
 
   const onSave = async (): Promise<void> => {
+    if (missingFields.length > 0) {
+      setError(`请先完善以下字段：${missingFields.join('、')}`);
+      setMessage('');
+      return;
+    }
+
     setSaving(true);
     setError('');
     setMessage('');
@@ -157,7 +176,7 @@ export function AdminEditorForm({ mode, initialData }: AdminEditorFormProps): JS
       <div className="flex flex-wrap items-center gap-3">
         <button
           type="button"
-          disabled={saving || !normalizedSlug || !title.trim() || !content.trim()}
+          disabled={saving}
           onClick={() => {
             void onSave();
           }}
