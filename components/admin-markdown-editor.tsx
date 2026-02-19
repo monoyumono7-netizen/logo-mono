@@ -84,7 +84,7 @@ export function AdminMarkdownEditor({ value, onChange }: AdminMarkdownEditorProp
           onChange(getMarkdown(editorRef));
         }}
         onLoad={() => {
-          onChange(getMarkdown(editorRef));
+          setMarkdown(editorRef, value);
         }}
       />
     </div>

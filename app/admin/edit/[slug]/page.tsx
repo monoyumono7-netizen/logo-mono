@@ -11,13 +11,13 @@ interface EditAdminPostPageProps {
   };
 }
 
-export default function EditAdminPostPage({ params }: EditAdminPostPageProps): JSX.Element {
+export default async function EditAdminPostPage({ params }: EditAdminPostPageProps): Promise<JSX.Element> {
   if (!isAdminAuthenticated(cookies())) {
     redirect('/admin');
   }
 
   try {
-    const post = readAdminPostBySlug(params.slug);
+    const post = await readAdminPostBySlug(params.slug);
     return (
       <section className="py-2 md:py-4">
         <AdminEditorForm

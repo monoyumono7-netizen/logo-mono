@@ -5,7 +5,7 @@ import { AdminPanel } from '@/components/admin-panel';
 import { isAdminAuthenticated } from '@/lib/admin-auth';
 import { listAdminPosts } from '@/lib/admin-posts';
 
-export default function AdminPage(): JSX.Element {
+export default async function AdminPage(): Promise<JSX.Element> {
   const authed = isAdminAuthenticated(cookies());
   if (!authed) {
     return (
@@ -15,7 +15,7 @@ export default function AdminPage(): JSX.Element {
     );
   }
 
-  const posts = listAdminPosts();
+  const posts = await listAdminPosts();
   return (
     <section className="py-2 md:py-4">
       <AdminPanel initialPosts={posts} />

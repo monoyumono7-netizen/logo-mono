@@ -23,6 +23,27 @@ function today(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+}
+
+async function waitForPostVisible(pathname: string): Promise<boolean> {
+  for (let attempt = 0; attempt < 20; attempt += 1) {
+    const response = await fetch(pathname, {
+      method: 'GET',
+      cache: 'no-store'
+    }).catch(() => null);
+
+    if (response?.ok) {
+      return true;
+    }
+    await sleep(1500);
+  }
+  return false;
+}
+
 export function AdminEditorForm({ mode, initialData }: AdminEditorFormProps): JSX.Element {
   const [slug, setSlug] = useState(initialData.slug);
   const [title, setTitle] = useState(initialData.title);
@@ -85,8 +106,18 @@ export function AdminEditorForm({ mode, initialData }: AdminEditorFormProps): JS
       return;
     }
 
+    const postPath = `/posts/${encodeURIComponent(normalizedSlug)}`;
+    setMessage('保存成功，正在检测文章可见性并自动跳转...');
+
+    const visible = await waitForPostVisible(postPath);
     setSaving(false);
-    setMessage(data.message ?? '保存成功，下次部署生效');
+
+    if (visible) {
+      window.location.href = postPath;
+      return;
+    }
+
+    setMessage(`${data.message ?? '保存成功'} 文章还在发布中，请稍后访问 ${postPath}`);
   };
 
   return (
