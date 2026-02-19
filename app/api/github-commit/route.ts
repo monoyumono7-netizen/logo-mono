@@ -22,6 +22,11 @@ interface GitHubContentResponse {
   readonly sha: string;
 }
 
+interface GitHubErrorBody {
+  readonly message?: string;
+  readonly documentation_url?: string;
+}
+
 function parseRepo(repo: string): { readonly owner: string; readonly name: string } {
   const [owner, name] = repo.split('/');
   if (!owner || !name) {
@@ -81,6 +86,43 @@ async function fetchExistingSha(options: {
   return typeof data.sha === 'string' ? data.sha : null;
 }
 
+function resolveTargetBranch(inputBranch: string | undefined): string {
+  if (typeof inputBranch === 'string' && inputBranch.trim().length > 0) {
+    return inputBranch.trim();
+  }
+
+  const envBranch = process.env.REPO_BRANCH;
+  if (typeof envBranch === 'string' && envBranch.trim().length > 0) {
+    return envBranch.trim();
+  }
+
+  return 'main';
+}
+
+function parseGitHubErrorMessage(status: number, rawText: string): string {
+  try {
+    const payload = JSON.parse(rawText) as GitHubErrorBody;
+    const message = payload.message ?? rawText;
+    const docs = payload.documentation_url ? `；文档：${payload.documentation_url}` : '';
+
+    if (status === 403 && message.includes('Resource not accessible by personal access token')) {
+      return 'GitHub Token 权限不足（403）。请使用可写入该仓库的 Token：fine-grained 需给 Contents: Read and write，或 classic 需 repo 权限。';
+    }
+
+    if (status === 401) {
+      return `GitHub Token 无效或已过期（401）：${message}${docs}`;
+    }
+
+    if (status === 404) {
+      return `目标仓库或分支不存在（404）：${message}${docs}`;
+    }
+
+    return `提交失败（${status}）：${message}${docs}`;
+  } catch {
+    return `提交失败（${status}）：${rawText}`;
+  }
+}
+
 export async function POST(request: Request): Promise<Response> {
   if (!isAdminAuthenticated(cookies())) {
     return Response.json({ ok: false, message: '未登录或会话过期' }, { status: 401 });
@@ -116,7 +158,7 @@ export async function POST(request: Request): Promise<Response> {
     }
 
     const { owner, name } = parseRepo(repo);
-    const branch = typeof body.branch === 'string' && body.branch.trim().length > 0 ? body.branch.trim() : 'main';
+    const branch = resolveTargetBranch(body.branch);
     const filePath = `content/posts/${slug}.md`;
     const sha = await fetchExistingSha({ owner, repo: name, path: filePath, branch, token });
 
@@ -143,21 +185,26 @@ export async function POST(request: Request): Promise<Response> {
 
     if (!response.ok) {
       const text = await response.text();
-      return Response.json({ ok: false, message: `提交失败: ${response.status} ${text}` }, { status: 500 });
+      const message = parseGitHubErrorMessage(response.status, text);
+      return Response.json({ ok: false, message }, { status: response.status });
     }
 
     const result = await response.json();
 
     const deployHook = process.env.VERCEL_DEPLOY_HOOK_URL;
+    let deployHint = `已提交到 ${branch} 分支；若 Vercel Production Branch 同为 ${branch}，将自动部署。`;
     if (deployHook) {
-      void fetch(deployHook, { method: 'POST' });
+      const deployResponse = await fetch(deployHook, { method: 'POST' });
+      deployHint = deployResponse.ok
+        ? '已触发 Vercel Deploy Hook，部署已自动开始。'
+        : `Deploy Hook 调用失败（${deployResponse.status}），但代码已提交成功。`;
     }
 
     return Response.json({
       ok: true,
       path: filePath,
       commit: result.commit?.sha ?? '',
-      message: '保存成功，下次部署生效'
+      message: `保存成功。${deployHint}`
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : '未知错误';
