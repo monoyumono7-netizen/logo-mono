@@ -14,6 +14,8 @@ export function AdminPanel({ initialPosts }: AdminPanelProps): JSX.Element {
   const [posts, setPosts] = useState<readonly AdminPostSummary[]>(initialPosts);
   const [keyword, setKeyword] = useState('');
   const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
+  const [deletingSlug, setDeletingSlug] = useState('');
 
   const filteredPosts = useMemo(() => {
     const query = keyword.trim().toLowerCase();
@@ -31,6 +33,35 @@ export function AdminPanel({ initialPosts }: AdminPanelProps): JSX.Element {
   const onLogout = async (): Promise<void> => {
     await fetch('/api/admin/logout', { method: 'POST' });
     window.location.href = '/admin';
+  };
+
+  const onDelete = async (slug: string): Promise<void> => {
+    const confirmed = window.confirm(`确认删除文章 ${slug} 吗？删除后将提交到 GitHub。`);
+    if (!confirmed) {
+      return;
+    }
+
+    setDeletingSlug(slug);
+    setError('');
+    setMessage('');
+
+    try {
+      const response = await fetch('/api/github-commit', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ slug })
+      });
+      const data = (await response.json()) as { readonly ok?: boolean; readonly message?: string };
+      if (!response.ok || !data.ok) {
+        setError(data.message ?? '删除失败');
+        return;
+      }
+
+      setPosts((prev) => prev.filter((post) => post.slug !== slug));
+      setMessage(data.message ?? '删除成功');
+    } finally {
+      setDeletingSlug('');
+    }
   };
 
   return (
@@ -105,9 +136,21 @@ export function AdminPanel({ initialPosts }: AdminPanelProps): JSX.Element {
                   <td className="px-2 py-2 text-muted">{post.slug}</td>
                   <td className="px-2 py-2 text-muted">{post.date}</td>
                   <td className="px-2 py-2">
-                    <Link href={`/admin/edit/${post.slug}`} className="text-accent transition hover:opacity-75">
-                      编辑
-                    </Link>
+                    <div className="flex items-center gap-3">
+                      <Link href={`/admin/edit/${post.slug}`} className="text-accent transition hover:opacity-75">
+                        编辑
+                      </Link>
+                      <button
+                        type="button"
+                        disabled={deletingSlug === post.slug}
+                        onClick={() => {
+                          void onDelete(post.slug);
+                        }}
+                        className="text-red-600 transition hover:opacity-75 disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        {deletingSlug === post.slug ? '删除中...' : '删除'}
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -117,6 +160,7 @@ export function AdminPanel({ initialPosts }: AdminPanelProps): JSX.Element {
       </section>
 
       {message ? <p className="rounded-lg border border-emerald-300/50 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">{message}</p> : null}
+      {error ? <p className="rounded-lg border border-red-300/50 bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p> : null}
     </div>
   );
 }

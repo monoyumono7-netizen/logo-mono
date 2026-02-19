@@ -19,6 +19,12 @@ interface CommitBody {
   readonly branch?: string;
 }
 
+interface DeleteBody {
+  readonly slug?: string;
+  readonly branch?: string;
+  readonly message?: string;
+}
+
 interface GitHubContentResponse {
   readonly sha: string;
 }
@@ -124,6 +130,16 @@ function parseGitHubErrorMessage(status: number, rawText: string): string {
   }
 }
 
+function getGitHubConfig(): { readonly token: string; readonly owner: string; readonly name: string } {
+  const token = process.env.GITHUB_TOKEN;
+  const repo = process.env.REPO;
+  if (!token || !repo) {
+    throw new Error('缺少 GITHUB_TOKEN 或 REPO 环境变量');
+  }
+  const { owner, name } = parseRepo(repo);
+  return { token, owner, name };
+}
+
 export async function POST(request: Request): Promise<Response> {
   if (!isAdminAuthenticated(cookies())) {
     return Response.json({ ok: false, message: '未登录或会话过期' }, { status: 401 });
@@ -152,13 +168,7 @@ export async function POST(request: Request): Promise<Response> {
       content
     });
 
-    const token = process.env.GITHUB_TOKEN;
-    const repo = process.env.REPO;
-    if (!token || !repo) {
-      return Response.json({ ok: false, message: '缺少 GITHUB_TOKEN 或 REPO 环境变量' }, { status: 500 });
-    }
-
-    const { owner, name } = parseRepo(repo);
+    const { token, owner, name } = getGitHubConfig();
     const branch = resolveTargetBranch(body.branch);
     const filePath = `content/posts/${slug}.md`;
     const sha = await fetchExistingSha({ owner, repo: name, path: filePath, branch, token });
@@ -207,6 +217,82 @@ export async function POST(request: Request): Promise<Response> {
       path: filePath,
       commit: result.commit?.sha ?? '',
       message: `保存成功。${deployHint}`
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : '未知错误';
+    return Response.json({ ok: false, message }, { status: 400 });
+  }
+}
+
+export async function DELETE(request: Request): Promise<Response> {
+  if (!isAdminAuthenticated(cookies())) {
+    return Response.json({ ok: false, message: '未登录或会话过期' }, { status: 401 });
+  }
+
+  try {
+    const body = (await request.json()) as DeleteBody;
+    const slug = sanitizeSlug(requiredString(body.slug, 'slug'));
+    if (!slug) {
+      return Response.json({ ok: false, message: 'slug 不合法' }, { status: 400 });
+    }
+
+    const { token, owner, name } = getGitHubConfig();
+    const branch = resolveTargetBranch(body.branch);
+
+    const mdPath = `content/posts/${slug}.md`;
+    const mdxPath = `content/posts/${slug}.mdx`;
+
+    const mdSha = await fetchExistingSha({ owner, repo: name, path: mdPath, branch, token });
+    const mdxSha = mdSha ? null : await fetchExistingSha({ owner, repo: name, path: mdxPath, branch, token });
+
+    const targetPath = mdSha ? mdPath : mdxSha ? mdxPath : '';
+    const targetSha = mdSha ?? mdxSha;
+
+    if (!targetPath || !targetSha) {
+      return Response.json({ ok: false, message: '目标文章不存在，无法删除' }, { status: 404 });
+    }
+
+    const commitMessage =
+      typeof body.message === 'string' && body.message.trim().length > 0
+        ? body.message.trim()
+        : `delete post: ${slug}`;
+
+    const response = await fetch(`https://api.github.com/repos/${owner}/${name}/contents/${targetPath}`, {
+      method: 'DELETE',
+      headers: {
+        Accept: 'application/vnd.github+json',
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+        'X-GitHub-Api-Version': '2022-11-28'
+      },
+      body: JSON.stringify({
+        message: commitMessage,
+        sha: targetSha,
+        branch
+      })
+    });
+
+    if (!response.ok) {
+      const text = await response.text();
+      const message = parseGitHubErrorMessage(response.status, text);
+      return Response.json({ ok: false, message }, { status: response.status });
+    }
+
+    revalidateTag('posts');
+
+    const deployHook = process.env.VERCEL_DEPLOY_HOOK_URL;
+    let deployHint = `已删除并提交到 ${branch} 分支；若 Vercel Production Branch 同为 ${branch}，将自动部署。`;
+    if (deployHook) {
+      const deployResponse = await fetch(deployHook, { method: 'POST' });
+      deployHint = deployResponse.ok
+        ? '已触发 Vercel Deploy Hook，部署已自动开始。'
+        : `Deploy Hook 调用失败（${deployResponse.status}），但删除提交已成功。`;
+    }
+
+    return Response.json({
+      ok: true,
+      path: targetPath,
+      message: `删除成功。${deployHint}`
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : '未知错误';
