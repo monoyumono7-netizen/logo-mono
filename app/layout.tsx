@@ -8,6 +8,8 @@ import { SiteHeader } from '@/components/site-header';
 import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from '@/lib/constants';
 
 import './globals.css';
+import '@toast-ui/editor/dist/toastui-editor.css';
+import 'prismjs/themes/prism.css';
 
 const sora = Sora({ subsets: ['latin'], weight: ['500', '600', '700'], variable: '--font-display' });
 const plex = IBM_Plex_Sans({ subsets: ['latin'], weight: ['400', '500', '600'], variable: '--font-body' });

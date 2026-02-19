@@ -3,3 +3,9 @@ node_modules
 .env.local
 dist
 npm-debug.log*
+.npm-cache/
+node_modules_backup_*/
+.sisyphus/
+opencode*.json
+oh-my-opencode*.json
+*.tsbuildinfo

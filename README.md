@@ -32,6 +32,11 @@ NEXT_PUBLIC_GISCUS_REPO=owner/repo
 NEXT_PUBLIC_GISCUS_REPO_ID=
 NEXT_PUBLIC_GISCUS_CATEGORY=Announcements
 NEXT_PUBLIC_GISCUS_CATEGORY_ID=
+
+ADMIN_PASSWORD=
+GITHUB_TOKEN=
+REPO=owner/repo
+VERCEL_DEPLOY_HOOK_URL=
 ```
 
 ## Giscus 配置步骤
@@ -47,6 +52,18 @@ NEXT_PUBLIC_GISCUS_CATEGORY_ID=
 2. 将 `REST URL` 和 `REST TOKEN` 填到 `.env.local`。
 3. 文章页会调用 `POST /api/views/[slug]` 增加阅读量。
 4. 同一 IP + UA 在 1 小时内只计一次，不记录原始 IP（哈希后存储）。
+
+## Admin 管理后台
+
+- 入口：`/admin`
+- 登录：输入 `.env.local` 的 `ADMIN_PASSWORD`
+- 功能：
+  - 查看文章列表（读取本地 `content/posts`）
+  - 新建文章（`/admin/new`）
+  - 编辑文章（`/admin/edit/[slug]`）
+  - 上传本地 Markdown（拖拽或多选）
+- 保存机制：调用 `/api/github-commit`，使用 GitHub Contents API 提交到 `REPO` 对应仓库的 `content/posts/*.md`
+- 可选：配置 `VERCEL_DEPLOY_HOOK_URL` 后，保存成功会自动触发一次部署 webhook
 
 ## 目录结构
 
