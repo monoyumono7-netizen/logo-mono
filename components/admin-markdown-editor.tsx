@@ -1,13 +1,10 @@
 'use client';
 
 import codeSyntaxHighlight from '@toast-ui/editor-plugin-code-syntax-highlight';
-import dynamic from 'next/dynamic';
 import Prism from 'prismjs';
 import { useEffect, useRef } from 'react';
 
-import type { Editor as ToastReactEditor } from '@toast-ui/react-editor';
-
-const ToastEditor = dynamic(() => import('@toast-ui/react-editor').then((module) => module.Editor), { ssr: false });
+import { Editor as ToastEditor, type Editor as ToastReactEditor } from '@toast-ui/react-editor';
 
 interface AdminMarkdownEditorProps {
   readonly value: string;
@@ -84,6 +81,9 @@ export function AdminMarkdownEditor({ value, onChange }: AdminMarkdownEditorProp
           }
         }}
         onChange={() => {
+          onChange(getMarkdown(editorRef));
+        }}
+        onLoad={() => {
           onChange(getMarkdown(editorRef));
         }}
       />
