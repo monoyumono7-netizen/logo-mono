@@ -1,5 +1,6 @@
 import { Buffer } from 'node:buffer';
 
+import { revalidateTag } from 'next/cache';
 import { cookies } from 'next/headers';
 
 import { isAdminAuthenticated } from '@/lib/admin-auth';
@@ -190,6 +191,7 @@ export async function POST(request: Request): Promise<Response> {
     }
 
     const result = await response.json();
+    revalidateTag('posts');
 
     const deployHook = process.env.VERCEL_DEPLOY_HOOK_URL;
     let deployHint = `已提交到 ${branch} 分支；若 Vercel Production Branch 同为 ${branch}，将自动部署。`;

@@ -3,6 +3,6 @@ import { getSearchDocuments } from '@/lib/posts';
 export const revalidate = 3600;
 
 export async function GET(): Promise<Response> {
-  const documents = getSearchDocuments();
+  const documents = await getSearchDocuments();
   return Response.json(documents);
 }

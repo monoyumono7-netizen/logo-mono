@@ -7,17 +7,15 @@ import { ShareButtons } from '@/components/share-buttons';
 import { ViewCounter } from '@/components/view-counter';
 import { formatDate } from '@/lib/date';
 import { SITE_URL } from '@/lib/constants';
-import { getAllSlugs, getPostBySlug } from '@/lib/posts';
+import { getPostBySlug } from '@/lib/posts';
 import { getViewCount } from '@/lib/views';
+
+export const revalidate = 15;
 
 interface PostPageProps {
   readonly params: {
     readonly slug: string;
   };
-}
-
-export function generateStaticParams(): { slug: string }[] {
-  return getAllSlugs().map((slug) => ({ slug }));
 }
 
 export async function generateMetadata({ params }: PostPageProps): Promise<Metadata> {

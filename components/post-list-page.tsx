@@ -8,7 +8,7 @@ interface PostListPageProps {
 }
 
 export async function PostListPage({ currentPage }: PostListPageProps): Promise<JSX.Element> {
-  const { posts, totalPages } = getPaginatedPosts(currentPage);
+  const { posts, totalPages } = await getPaginatedPosts(currentPage);
   const viewsMap = await getViewCountMap(posts.map((post) => post.slug));
 
   return (

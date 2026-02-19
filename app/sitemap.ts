@@ -3,8 +3,8 @@ import type { MetadataRoute } from 'next';
 import { SITE_URL } from '@/lib/constants';
 import { getAllPostSummaries } from '@/lib/posts';
 
-export default function sitemap(): MetadataRoute.Sitemap {
-  const posts = getAllPostSummaries();
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const posts = await getAllPostSummaries();
 
   return [
     {

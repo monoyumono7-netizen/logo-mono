@@ -13,7 +13,7 @@ function escapeXml(content: string): string {
 }
 
 export async function GET(): Promise<Response> {
-  const posts = getAllPostSummaries();
+  const posts = await getAllPostSummaries();
 
   const items = posts
     .map((post) => {
