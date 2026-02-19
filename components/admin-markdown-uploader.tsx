@@ -2,6 +2,7 @@
 
 import { useMemo, useRef, useState } from 'react';
 
+import { waitForPostVisible } from '@/lib/client-post-visibility';
 import { slugify } from '@/lib/utils';
 
 interface ParsedUploadItem {
@@ -171,8 +172,23 @@ export function AdminMarkdownUploader({ onUploaded }: AdminMarkdownUploaderProps
 
     setSaving(false);
     setItems([]);
-    setMessage('保存成功，下次部署生效');
     onUploaded(uploaded);
+
+    const firstSlug = uploaded[0]?.slug;
+    if (!firstSlug) {
+      setMessage('保存成功');
+      return;
+    }
+
+    const postPath = `/posts/${encodeURIComponent(firstSlug)}`;
+    setMessage('上传成功，正在检测文章可见性并自动跳转...');
+    const visible = await waitForPostVisible(postPath);
+    if (visible) {
+      window.location.href = postPath;
+      return;
+    }
+
+    setMessage(`保存成功。文章还在发布中，请稍后访问 ${postPath}`);
   };
 
   return (

@@ -73,7 +73,7 @@ export function AdminPanel({ initialPosts }: AdminPanelProps): JSX.Element {
             }
           });
           setPosts(nextPosts);
-          setMessage('保存成功，下次部署生效');
+          setMessage('保存成功，正在检测是否已可访问。');
         }}
       />
 

@@ -52,7 +52,6 @@ export function GiscusComments({ pathname }: GiscusCommentsProps): JSX.Element {
     script.setAttribute('data-theme', theme);
     script.setAttribute('data-lang', 'zh-CN');
     script.setAttribute('data-loading', 'lazy');
-    script.setAttribute('data-term', pathname);
 
     const timeout = window.setTimeout(() => {
       setFailed(true);
@@ -101,9 +100,10 @@ export function GiscusComments({ pathname }: GiscusCommentsProps): JSX.Element {
       <h2 className="mb-4 font-display text-2xl font-semibold text-text">评论</h2>
       {loading ? <p className="mb-3 text-sm text-muted">评论系统加载中...</p> : null}
       {failed ? (
-        <p className="mb-3 rounded-lg border border-red-300/50 bg-red-50 px-3 py-2 text-sm text-red-600 dark:bg-red-950/30">
-          评论加载失败，请检查 Giscus 配置或稍后重试。
-        </p>
+        <div className="mb-3 rounded-lg border border-red-300/50 bg-red-50 px-3 py-2 text-sm text-red-600 dark:bg-red-950/30">
+          <p>评论加载失败。若弹窗提示 “Unable to create discussion.”，通常是 Giscus 配置问题。</p>
+          <p className="mt-1">请确认仓库已开启 Discussions，Giscus App 已安装，且 repoId/categoryId 与当前仓库一致。</p>
+        </div>
       ) : null}
       <div id="giscus-container" />
     </section>

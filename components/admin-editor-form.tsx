@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react';
 
 import { AdminMarkdownEditor } from '@/components/admin-markdown-editor';
+import { waitForPostVisible } from '@/lib/client-post-visibility';
 import { slugify } from '@/lib/utils';
 
 interface AdminEditorFormProps {
@@ -21,27 +22,6 @@ interface AdminEditorFormProps {
 
 function today(): string {
   return new Date().toISOString().slice(0, 10);
-}
-
-function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => {
-    setTimeout(resolve, ms);
-  });
-}
-
-async function waitForPostVisible(pathname: string): Promise<boolean> {
-  for (let attempt = 0; attempt < 20; attempt += 1) {
-    const response = await fetch(pathname, {
-      method: 'GET',
-      cache: 'no-store'
-    }).catch(() => null);
-
-    if (response?.ok) {
-      return true;
-    }
-    await sleep(1500);
-  }
-  return false;
 }
 
 export function AdminEditorForm({ mode, initialData }: AdminEditorFormProps): JSX.Element {
