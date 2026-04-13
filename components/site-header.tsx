@@ -22,6 +22,9 @@ export function SiteHeader(): JSX.Element {
           <a href="/feed.xml" className="rounded-md px-2 py-1 transition hover:bg-card hover:text-text">
             RSS
           </a>
+          <Link href="/kronos" className="rounded-md px-2 py-1 transition hover:bg-card hover:text-text">
+            AI 预测
+          </Link>
           <Link href="/admin" className="rounded-md px-2 py-1 transition hover:bg-card hover:text-text">
             管理
           </Link>

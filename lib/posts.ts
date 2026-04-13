@@ -159,10 +159,16 @@ function getLocalPostSources(): readonly PostSource[] {
 
 async function listPostSources(): Promise<readonly PostSource[]> {
   const remote = await getRemotePostSources();
-  if (remote) {
-    return remote;
+  const local = getLocalPostSources();
+
+  if (!remote) {
+    return local;
   }
-  return getLocalPostSources();
+
+  // Merge: local files take precedence over remote for the same slug
+  const slugSet = new Set(remote.map((item) => item.slug));
+  const localOnly = local.filter((item) => !slugSet.has(item.slug));
+  return [...remote, ...localOnly];
 }
 
 function parseFrontmatter(content: string): PostFrontmatter {
